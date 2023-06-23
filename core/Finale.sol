@@ -7,6 +7,12 @@ import "./ContractErrors.sol";
 import "../utils/Ownable.sol";
 import "../utils/Math.sol";
 
+/**
+ * @title Finale Contract
+ * @dev The Finale contract allows users to perform token swaps using the ISyncRouter and IMuteRouter interfaces.
+ * It provides functions for approving tokens, executing swaps, and handling token transfers.
+ * The contract also includes reentrancy guard, contract error handling, and ownership functionality.
+ */
 contract Finale is ReentrancyGuard, ContractErrors, Ownable {
     using Math for uint;
     event SwapExecuted(
@@ -35,6 +41,11 @@ contract Finale is ReentrancyGuard, ContractErrors, Ownable {
         muteRouter = IMuteRouter(_muteRouterAddress);
     }
 
+    /**
+     * @notice Sets the maximum allowances for the specified tokens to the syncRouter and muteRouter addresses.
+     * @dev Only the contract owner can call this function.
+     * @param tokens Array of token addresses.
+     */
     function maxApprovals(address[] calldata tokens) external onlyOwner {
         for(uint i = 0; i < tokens.length; i++) {
             IERC20 token = IERC20(tokens[i]);
@@ -43,6 +54,11 @@ contract Finale is ReentrancyGuard, ContractErrors, Ownable {
         }
     }
 
+    /**
+     * @notice Revokes the allowances for the specified tokens from the syncRouter and muteRouter addresses.
+     * @dev Only the contract owner can call this function.
+     * @param tokens Array of token addresses.
+     */
     function revokeApprovals(address[] calldata tokens) external onlyOwner {
         for(uint i = 0; i < tokens.length; i++) {
             IERC20 token = IERC20(tokens[i]);
@@ -51,6 +67,15 @@ contract Finale is ReentrancyGuard, ContractErrors, Ownable {
         }
     }
 
+    /**
+     * @notice Executes a token swap using the specified pool, tokenIn, amountIn, and amountOutMin.
+     * @dev Internal function used by syncswap and muteswap.
+     * @param poolAddress Address of the pool to swap tokens in.
+     * @param tokenIn Address of the input token.
+     * @param amountIn Amount of input token to swap.
+     * @param amountOutMin Minimum amount of output token expected.
+     * @return TokenAmount structure containing the output token and amount.
+     */
     function syncswap(
         address poolAddress,
         address tokenIn,
@@ -85,6 +110,15 @@ contract Finale is ReentrancyGuard, ContractErrors, Ownable {
         return amountOut;
     }
 
+    /**
+     * @notice Executes a token swap using the specified tokenIn, tokenOut, amountIn, and amountOutMin.
+     * @dev Internal function used by executeSwaps.
+     * @param tokenIn Address of the input token.
+     * @param tokenOut Address of the output token.
+     * @param amountIn Amount of input token to swap.
+     * @param amountOutMin Minimum amount of output token expected.
+     * @return TokenAmount structure containing the output token and amount.
+     */
     function muteswap(
         address tokenIn,
         address tokenOut,
@@ -116,6 +150,12 @@ contract Finale is ReentrancyGuard, ContractErrors, Ownable {
         return tokenOutAmount;
     }
 
+    /**
+     * @notice Executes a series of swap operations based on the provided swapParams.
+     * @dev This function performs chained swaps using syncswap and muteswap functions.
+     * @param swapParams Array of SwapParam structures containing swap details.
+     * @param minTotalAmountOut Minimum total amount of output token expected.
+     */
     function executeSwaps(Params.SwapParam[] memory swapParams, uint minTotalAmountOut) nonReentrant() external {
         address tokenG = swapParams[0].tokenIn;
         IERC20 token = IERC20(tokenG);
