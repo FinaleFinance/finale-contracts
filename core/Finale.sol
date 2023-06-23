@@ -58,7 +58,6 @@ contract Finale is ReentrancyGuard, ContractErrors, Ownable {
         uint amountOutMin
     ) internal returns (IPool.TokenAmount memory) {
         IERC20 token = IERC20(tokenIn);
-        // require(token.transferFrom(msg.sender ,address(this), amountIn), "Transfer failed");
         require(token.approve(address(_syncrouterAddress), type(uint256).max), "Approval failed");
         bytes memory swapData = abi.encode(tokenIn, address(this), uint8(2));
         ISyncRouter.SwapStep memory step = ISyncRouter.SwapStep({
@@ -93,7 +92,6 @@ contract Finale is ReentrancyGuard, ContractErrors, Ownable {
         uint amountOutMin
     ) internal returns (IPool.TokenAmount memory) {
         IERC20 token = IERC20(tokenIn);
-        // require(token.transferFrom(msg.sender ,address(this), amountIn), "Transfer failed");
         require(token.approve(address(_muteRouterAddress), type(uint256).max), "Approval failed");
         address[] memory path = new address[](2);
         path[0] = tokenIn;
